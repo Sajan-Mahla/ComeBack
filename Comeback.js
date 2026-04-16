@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 const mongoose = require("mongoose");
 
-mongoose.connect("mongodb+srv://12406763:7009062809@cluster0.dqv20r0.mongodb.net/test")
+mongoose.connect("Nooooo")
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
 
