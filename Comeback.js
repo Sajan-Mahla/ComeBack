@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 const mongoose = require("mongoose");
 
-mongoose.connect("Nooooo")
+mongoose.connect("Nooooo_get_your_own")
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
 
