@@ -43,19 +43,32 @@ const CreateNote = async(req,res) =>{
 // GET NOTES(s)
 const getNote = async(req,res) => {
     try{
-        const {userId} = req.params;
+        const {userId, page = 1, limit = 5} = req.query;
 
         if(!userId){
             return res.status(400).json({message: "UserId Required"})
         }
 
-        const notes = await Note.find({ userId: userId});
+         const limitNum = Number(limit); 
+        const notes = await Note.find({ userId: userId})
+        .sort({createdAt: -1})
+        .skip((page - 1) * limit)
+        .limit(Number(limit));
+
+        const total = await Note.countDocuments({ userId });
 
         if(notes.length == 0){
-            return res.status(404).json({message: "No notes found"})
+            return res.json({
+                notes: [],
+                message: "No notes found"
+            })
         }
 
+       
         res.status(200).json({
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total / limit),
             message: "Notes fetched successfully",
             length: notes.length,
             notes
@@ -64,6 +77,7 @@ const getNote = async(req,res) => {
         res.status(500).json({message: err.message})
     }
 }
+
 
 // DELETE NOTE(s)
  const deleteNote = async(req,res) => {
