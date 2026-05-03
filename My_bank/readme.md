@@ -169,7 +169,7 @@ Authorization: Bearer <your_token_here>
 
 ---
 
-## 👨‍💻 Author: SAJAN MAHLA
+## 👨‍💻 Author: Sajan Mahla
 
 Built with 💪 and 4 hours of grind.
 
