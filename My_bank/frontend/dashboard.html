@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+    }
+
+    h2 {
+      margin-bottom: 24px;
+      font-size: 24px;
+      color: #1a1a2e;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus { border-color: #4f46e5; }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:hover { opacity: 0.85; }
+
+    .btn-deposit  { background: #22c55e; color: white; }
+    .btn-withdraw { background: #ef4444; color: white; }
+    .btn-balance  { background: #4f46e5; color: white; }
+
+    #balance {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a2e;
+      min-height: 48px;
+    }
+
+    .logout {
+      margin-top: 20px;
+      width: 100%;
+      background: #e2e8f0;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🏦 Dashboard</h2>
+
+    <input id="accountNumber" placeholder="Account Number" />
+    <input id="amount" placeholder="Amount (e.g. 500)" type="number" />
+
+    <div class="buttons">
+      <button class="btn-deposit"  onclick="deposit()">⬆ Deposit</button>
+      <button class="btn-withdraw" onclick="withdraw()">⬇ Withdraw</button>
+      <button class="btn-balance"  onclick="getBalance()">💰 Balance</button>
+    </div>
+
+    <div id="balance">Balance will appear here</div>
+
+    <button class="logout" onclick="localStorage.clear(); window.location.href='index.html'">
+      🚪 Logout
+    </button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
