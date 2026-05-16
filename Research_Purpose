@@ -1,0 +1,108 @@
+JWT (JSON Web Token)
+What it is
+A self-contained token that holds user data (claims) inside it. No server-side storage needed. It's a string with 3 parts:
+HEADER.PAYLOAD.SIGNATURE
+eyJhbGci...  .  eyJ1c2VySWQi...  .  abc123sig...
+
+Header → algorithm used (HS256, RS256)
+Payload → actual data (userId, role, exp)
+Signature → HMAC of header+payload with a secret key
+
+The server verifies the signature to trust the token. It never needs to "look it up."
+
+JWT Flow
+1. User logs in → POST /login { email, password }
+2. Server validates credentials
+3. Server creates JWT → signs it with SECRET_KEY
+4. Server sends JWT to client
+5. Client stores it (localStorage / cookie)
+
+--- every request after ---
+
+6. Client sends:  Authorization: Bearer <token>
+7. Server receives token
+8. Server VERIFIES signature (no DB call needed)
+9. Decodes payload → gets userId, role, etc.
+10. Grants or denies access
+
+
+SESSION (Server-Side Sessions)
+What it is
+The server stores user data on the backend (memory, DB, Redis). The client only holds a session ID (a random opaque string like sess:abc123). On each request, the server uses that ID to look up the real data.
+
+Session Flow
+1. User logs in → POST /login { email, password }
+2. Server validates credentials
+3. Server creates a session object → stores in memory/Redis
+   { sessionId: "abc123", userId: 42, role: "admin" }
+4. Server sends back a cookie:  Set-Cookie: sessionId=abc123
+
+--- every request after ---
+
+5. Browser auto-sends cookie:  Cookie: sessionId=abc123
+6. Server receives sessionId
+7. Server looks up "abc123" in store → finds user data
+8. Grants or denies access
+
+
+JWT vs SESSION — Pros & Cons
+JWTSessionStorageClient-sideServer-sideDB call per request❌ No✅ YesScalability✅ Stateless, scales easily⚠️ Needs shared store (Redis)Logout / Revoke❌ Hard — token lives until expiry✅ Easy — delete sessionToken size❌ Larger (carries data)✅ Small (just an ID)Security control❌ Can't invalidate mid-flight✅ Full controlMicroservices✅ No shared state needed⚠️ All services need session storeSensitive data leak⚠️ Payload is base64, not encrypted✅ Data stays on server
+
+
+Redis — Its Relation to Both
+Redis + Sessions (Primary use case)
+Sessions need a fast shared store — this is where Redis shines.
+Problem without Redis:
+  - App runs on 3 servers
+  - User logs in on Server 1 → session stored in Server 1 memory
+  - Next request hits Server 2 → session not found → logged out ❌
+
+Solution with Redis:
+  - All servers connect to ONE Redis instance
+  - Session stored in Redis, not in-process memory
+  - Any server can look up any session ✅
+sessionId: "abc123"  →  Redis key: "sess:abc123"
+                          Redis val: { userId: 42, role: "admin" }
+                          TTL: 3600s (auto-expires)
+Redis is perfect for this because:
+
+Sub-millisecond reads
+Built-in TTL (sessions auto-expire)
+Shared across all instances
+
+
+Redis + JWT (Blacklisting / Revocation)
+JWT's biggest weakness is you can't revoke it before expiry. Redis solves this:
+Logout flow with Redis blacklist:
+1. User logs out
+2. Server adds token's jti (JWT ID) to Redis:
+   SET blacklist:jti_abc123  "1"  EX 3600
+3. On every request, server checks:
+   EXISTS blacklist:jti_abc123 → if yes, reject ❌
+
+Result: You can now "invalidate" JWTs ✅
+This gives JWT the revocation power of sessions, at the cost of one Redis lookup per request.
+
+When to Use What
+Use JWT when:
+  ✅ Microservices / distributed systems
+  ✅ Mobile apps (no cookies)
+  ✅ Stateless APIs
+  ✅ Short-lived tokens (15min access + refresh token)
+
+Use Sessions when:
+  ✅ Traditional web apps
+  ✅ You need instant logout/revoke
+  ✅ Sensitive user data (don't expose in token)
+  ✅ Fine-grained session control
+
+Use Redis when:
+  ✅ Scaling sessions across multiple servers
+  ✅ JWT blacklisting
+  ✅ Both patterns at production scale
+
+The Production Pattern (Best of both worlds)
+Most production systems do this:
+Access Token  → JWT, short-lived (15 min)       → stateless, fast
+Refresh Token → stored in Redis/DB, long-lived  → revocable, secure
+Short-lived JWTs limit damage if stolen. Refresh tokens in Redis give you full revocation control.
